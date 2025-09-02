@@ -15,15 +15,15 @@
         <q-list dense>
           <q-item-label header> CAD Tools </q-item-label>
         </q-list>
-        
+
         <!-- Vertical Stacked Tool Groups -->
         <div class="toolbar-vertical">
           <!-- Drawing Tools -->
           <div class="toolbar-section">
             <div class="section-title">Tools</div>
             <div class="tool-grid">
-              <q-btn 
-                @click="setTool('select')" 
+              <q-btn
+                @click="setTool('select')"
                 :color="currentTool === 'select' ? 'primary' : 'grey-6'"
                 flat
                 dense
@@ -31,12 +31,12 @@
                 class="tool-btn"
               >
                 <q-icon name="pan_tool" size="xs" />
-                <div class="tool-label">Select</div>
+                <div class="tool-label">Select/Pan</div>
                 <div class="tool-shortcut">(V)</div>
               </q-btn>
-              
-              <q-btn 
-                @click="setTool('polyline')" 
+
+              <q-btn
+                @click="setTool('polyline')"
                 :color="currentTool === 'polyline' ? 'primary' : 'grey-6'"
                 flat
                 dense
@@ -47,9 +47,9 @@
                 <div class="tool-label">Polyline</div>
                 <div class="tool-shortcut">(P)</div>
               </q-btn>
-              
-              <q-btn 
-                @click="setTool('line')" 
+
+              <q-btn
+                @click="setTool('line')"
                 :color="currentTool === 'line' ? 'primary' : 'grey-6'"
                 flat
                 dense
@@ -60,9 +60,9 @@
                 <div class="tool-label">Line</div>
                 <div class="tool-shortcut">(L)</div>
               </q-btn>
-              
-              <q-btn 
-                @click="setTool('rectangle')" 
+
+              <q-btn
+                @click="setTool('rectangle')"
                 :color="currentTool === 'rectangle' ? 'primary' : 'grey-6'"
                 flat
                 dense
@@ -73,9 +73,9 @@
                 <div class="tool-label">Rectangle</div>
                 <div class="tool-shortcut">(R)</div>
               </q-btn>
-              
-              <q-btn 
-                @click="setTool('circle')" 
+
+              <q-btn
+                @click="setTool('circle')"
                 :color="currentTool === 'circle' ? 'primary' : 'grey-6'"
                 flat
                 dense
@@ -86,9 +86,9 @@
                 <div class="tool-label">Circle</div>
                 <div class="tool-shortcut">(C)</div>
               </q-btn>
-              
-              <q-btn 
-                @click="setTool('dimension')" 
+
+              <q-btn
+                @click="setTool('dimension')"
                 :color="currentTool === 'dimension' ? 'primary' : 'grey-6'"
                 flat
                 dense
@@ -101,13 +101,13 @@
               </q-btn>
             </div>
           </div>
-          
+
           <!-- Actions -->
           <div class="toolbar-section">
             <div class="section-title">Actions</div>
             <div class="tool-grid">
-              <q-btn 
-                @click="clearCanvas" 
+              <q-btn
+                @click="clearCanvas"
                 color="grey-6"
                 flat
                 dense
@@ -118,9 +118,9 @@
                 <div class="tool-label">Clear</div>
                 <div class="tool-shortcut">(Ctrl+Del)</div>
               </q-btn>
-              
-              <q-btn 
-                @click="undo" 
+
+              <q-btn
+                @click="undo"
                 :disable="!canUndo"
                 :color="canUndo ? 'grey-6' : 'grey-4'"
                 flat
@@ -132,9 +132,9 @@
                 <div class="tool-label">Undo</div>
                 <div class="tool-shortcut">(Ctrl+Z)</div>
               </q-btn>
-              
-              <q-btn 
-                @click="redo" 
+
+              <q-btn
+                @click="redo"
                 :disable="!canRedo"
                 :color="canRedo ? 'grey-6' : 'grey-4'"
                 flat
@@ -146,9 +146,9 @@
                 <div class="tool-label">Redo</div>
                 <div class="tool-shortcut">(Ctrl+Y)</div>
               </q-btn>
-              
-              <q-btn 
-                @click="refreshCanvas" 
+
+              <q-btn
+                @click="refreshCanvas"
                 color="grey-6"
                 flat
                 dense
@@ -161,13 +161,13 @@
               </q-btn>
             </div>
           </div>
-          
+
           <!-- Grid & Snap -->
           <div class="toolbar-section">
             <div class="section-title">Grid & Snap</div>
             <div class="tool-grid">
-              <q-btn 
-                @click="toggleGrid" 
+              <q-btn
+                @click="toggleGrid"
                 :color="showGrid ? 'primary' : 'grey-6'"
                 flat
                 dense
@@ -178,9 +178,9 @@
                 <div class="tool-label">Grid</div>
                 <div class="tool-shortcut">(G)</div>
               </q-btn>
-              
-              <q-btn 
-                @click="toggleSnapToGrid" 
+
+              <q-btn
+                @click="toggleSnapToGrid"
                 :color="snapToGrid ? 'primary' : 'grey-6'"
                 flat
                 dense
@@ -191,66 +191,158 @@
                 <div class="tool-label">Snap</div>
                 <div class="tool-shortcut">(S)</div>
               </q-btn>
-              
+
               <div class="tool-btn control-btn">
+                <q-popup-edit
+                  v-model="snapTolerance"
+                  :validate="(val) => val >= 1 && val <= 50"
+                  @save="setSnapTolerance"
+                  buttons
+                  label-set="Set"
+                  label-cancel="Cancel"
+                  :dark="isDarkMode"
+                >
+                  <div class="column q-gutter-md">
+                    <q-input
+                      v-model.number="snapTolerance"
+                      type="number"
+                      dense
+                      outlined
+                      label="Snap Tolerance"
+                      :rules="[val => val >= 1 && val <= 50 || 'Tolerance must be between 1-50']"
+                      min="1"
+                      max="50"
+                      autofocus
+                      :dark="isDarkMode"
+                    />
+                    <q-slider
+                      v-model="snapTolerance"
+                      :min="1"
+                      :max="50"
+                      :step="1"
+                      color="primary"
+                      dense
+                      :dark="isDarkMode"
+                    />
+                  </div>
+                </q-popup-edit>
+                <q-icon name="adjust" size="xs" color="grey-6" />
+                <div class="tool-label">Tolerance</div>
+                <div class="tool-value">{{ snapTolerance }}</div>
+              </div>
+
+              <div class="tool-btn control-btn">
+                <q-popup-edit
+                  v-model="gridSize"
+                  :validate="(val) => val >= 10 && val <= 100"
+                  @save="setGridSize"
+                  buttons
+                  label-set="Set"
+                  label-cancel="Cancel"
+                  :dark="isDarkMode"
+                >
+                  <q-input
+                    v-model.number="gridSize"
+                    type="number"
+                    dense
+                    outlined
+                    label="Grid Size"
+                    :rules="[val => val >= 10 && val <= 100 || 'Size must be between 10-100']"
+                    min="10"
+                    max="100"
+                    autofocus
+                    :dark="isDarkMode"
+                  />
+                </q-popup-edit>
                 <q-icon name="tune" size="xs" color="grey-6" />
                 <div class="tool-label">Size</div>
-                <q-input
-                  v-model.number="gridSize"
-                  type="number"
-                  dense
-                  outlined
-                  style="width: 40px; height: 24px;"
-                  @update:model-value="setGridSize"
-                  min="10"
-                  max="100"
-                />
+                <div class="tool-value">{{ gridSize }}</div>
               </div>
             </div>
           </div>
-          
+
           <!-- Line Properties -->
           <div class="toolbar-section">
             <div class="section-title">Line</div>
             <div class="tool-grid">
               <div class="tool-btn control-btn">
+                <q-popup-edit
+                  v-model="lineWidth"
+                  :validate="(val) => val >= 1 && val <= 10"
+                  @save="setLineWidth"
+                  buttons
+                  label-set="Set"
+                  label-cancel="Cancel"
+                  :dark="isDarkMode"
+                >
+                  <div class="column q-gutter-md">
+                    <q-input
+                      v-model.number="lineWidth"
+                      type="number"
+                      dense
+                      outlined
+                      label="Line Width"
+                      :rules="[val => val >= 1 && val <= 10 || 'Width must be between 1-10']"
+                      min="1"
+                      max="10"
+                      autofocus
+                      :dark="isDarkMode"
+                    />
+                    <q-slider
+                      v-model="lineWidth"
+                      :min="1"
+                      :max="10"
+                      :step="1"
+                      color="primary"
+                      dense
+                      :dark="isDarkMode"
+                    />
+                  </div>
+                </q-popup-edit>
                 <q-icon name="format_size" size="xs" color="grey-6" />
                 <div class="tool-label">Width</div>
-                <q-slider
-                  v-model="lineWidth"
-                  :min="1"
-                  :max="10"
-                  :step="1"
-                  style="width: 60px;"
-                  @update:model-value="setLineWidth"
-                  color="primary"
-                  dense
-                />
+                <div class="tool-value">{{ lineWidth }}</div>
               </div>
-              
-              <q-btn 
-                @click="showColorPicker = true" 
+
+              <q-btn
                 color="grey-6"
                 flat
                 dense
                 size="sm"
                 class="tool-btn"
               >
+                <q-popup-edit
+                  v-model="lineColor"
+                  @save="setLineColor"
+                  buttons
+                  label-set="Set"
+                  label-cancel="Cancel"
+                  :dark="isDarkMode"
+                >
+                  <q-color
+                    v-model="lineColor"
+                    format-model="hex"
+                    no-header
+                    no-footer
+                    class="my-picker"
+                    :dark="isDarkMode"
+                  />
+                </q-popup-edit>
                 <q-icon name="palette" size="xs" />
                 <div class="tool-label">Color</div>
-                <div 
+                <div
                   :style="{ backgroundColor: lineColor, width: '12px', height: '12px', borderRadius: '2px', border: '1px solid #ccc' }"
                 ></div>
               </q-btn>
             </div>
           </div>
-          
+
           <!-- Zoom -->
           <div class="toolbar-section">
             <div class="section-title">Zoom</div>
             <div class="tool-grid">
-              <q-btn 
-                @click="zoomIn" 
+              <q-btn
+                @click="zoomIn"
                 color="grey-6"
                 flat
                 dense
@@ -261,9 +353,9 @@
                 <div class="tool-label">Zoom In</div>
                 <div class="tool-shortcut">(Wheel)</div>
               </q-btn>
-              
-              <q-btn 
-                @click="zoomOut" 
+
+              <q-btn
+                @click="zoomOut"
                 color="grey-6"
                 flat
                 dense
@@ -274,9 +366,9 @@
                 <div class="tool-label">Zoom Out</div>
                 <div class="tool-shortcut">(Wheel)</div>
               </q-btn>
-              
-              <q-btn 
-                @click="resetZoom" 
+
+              <q-btn
+                @click="resetZoom"
                 color="grey-6"
                 flat
                 dense
@@ -289,13 +381,13 @@
               </q-btn>
             </div>
           </div>
-          
+
           <!-- Theme -->
           <div class="toolbar-section">
             <div class="section-title">Theme</div>
             <div class="tool-grid">
-              <q-btn 
-                @click="toggleTheme" 
+              <q-btn
+                @click="toggleTheme"
                 color="grey-6"
                 flat
                 dense
@@ -315,27 +407,8 @@
     <q-page-container>
       <router-view />
     </q-page-container>
-    
-    <!-- Color picker dialog -->
-    <q-dialog v-model="showColorPicker">
-      <q-card>
-        <q-card-section>
-          <div class="text-h6">Select Color</div>
-        </q-card-section>
-        <q-card-section>
-          <div class="row q-gutter-sm">
-            <q-btn
-              v-for="color in cadStore.colorOptions"
-              :key="color"
-              :style="{ backgroundColor: color }"
-              size="lg"
-              @click="selectColor(color)"
-              class="color-option"
-            />
-          </div>
-        </q-card-section>
-      </q-card>
-    </q-dialog>
+
+
   </q-layout>
 </template>
 
@@ -347,10 +420,12 @@ import { useThemeStore } from '../stores/theme-store.js'
 const cadStore = useCADStore()
 const themeStore = useThemeStore()
 
+// Computed properties for theme
+const isDarkMode = computed(() => themeStore.isDarkMode)
+
 
 
 const leftDrawerOpen = ref(true)
-const showColorPicker = ref(false)
 
 // Computed properties for CAD store
 const currentTool = computed(() => cadStore.currentTool)
@@ -361,6 +436,7 @@ const snapToGrid = computed(() => cadStore.snapToGrid)
 const gridSize = computed(() => cadStore.gridSize)
 const lineWidth = computed(() => cadStore.lineWidth)
 const lineColor = computed(() => cadStore.lineColor)
+const snapTolerance = computed(() => cadStore.snapTolerance)
 
 // Computed properties for theme store
 const themeIcon = computed(() => themeStore.themeIcon)
@@ -401,13 +477,16 @@ function setGridSize(size) {
   cadStore.setGridSize(size)
 }
 
+function setSnapTolerance(tolerance) {
+  cadStore.setSnapTolerance(tolerance)
+}
+
 function setLineWidth(width) {
   cadStore.setLineWidth(width)
 }
 
-function selectColor(color) {
+function setLineColor(color) {
   cadStore.setLineColor(color)
-  showColorPicker.value = false
 }
 
 function toggleTheme() {
@@ -438,16 +517,15 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.color-option {
-  width: 40px;
-  height: 40px;
-  border: 2px solid #dee2e6;
-  border-radius: 6px;
-  transition: border-color 0.2s ease;
+.tool-value {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: 2px;
 }
 
-.color-option:hover {
-  border-color: #adb5bd;
+.my-picker {
+  width: 200px;
 }
 
 /* Dark mode text improvements */
@@ -569,7 +647,7 @@ onMounted(() => {
     grid-template-columns: 1fr;
     gap: 12px;
   }
-  
+
   .tool-grid {
     grid-template-columns: 1fr 1fr 1fr;
   }

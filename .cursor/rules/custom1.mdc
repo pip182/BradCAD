@@ -1,0 +1,14 @@
+This project is a 2D CAD application built with Quasar and Vue. It allows you to draw lines, rectangles, circles, and dimensions on a canvas. It also allows you to save and load drawings, configurations are saved to local storage.
+We use Quasar components for the UI whenever possible, unless better options are available.
+Keep shared code in separate files, such as components, stores, and utils.
+Prefer composition API over options API.
+Use pinia for state management.
+Leave comments in the code for important information and future reference.
+Comments should be easily understood by an AI agent.
+Update related comments when code changes.
+
+---
+description: global rules for this project
+globs:
+alwaysApply: true
+---

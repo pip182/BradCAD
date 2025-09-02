@@ -8,12 +8,13 @@ export const useCADStore = defineStore('cad', () => {
   const zoomLevel = ref(1)
   const zoomMin = 0.1
   const zoomMax = 10
-  
+  const panOffset = ref({ x: 0, y: 0 })
+
   // Tool state
   const currentTool = ref('select')
   const lineWidth = ref(2)
   const lineColor = ref('#000000')
-  
+
   // Grid settings
   const gridSize = ref(20)
   const showGrid = ref(true)
@@ -21,55 +22,57 @@ export const useCADStore = defineStore('cad', () => {
   const snapToPoints = ref(true)
   const snapToLines = ref(true)
   const snapTolerance = ref(10)
-  
+
   // Drawing state
   const isDrawing = ref(false)
   const polylinePoints = ref([])
   const dimensionStart = ref(null)
+  const dimensionSecondPoint = ref(null)
+  const dimensionLinePosition = ref(null)
   const mousePosition = ref({ x: null, y: null })
-  
+
   // Vector objects
   const vectorObjects = ref([])
   const selectedObjects = ref([])
-  
+
   // Input state
   const userInput = ref('')
   const showInputDialog = ref(false)
   const inputPrompt = ref('')
   const inputCallback = ref(null)
-  
+
   // History for undo/redo with limits
   const history = ref([])
   const historyIndex = ref(-1)
   const MAX_HISTORY_SIZE = 50
-  
+
   // Error state
   const errorMessage = ref('')
   const showError = ref(false)
-  
+
   // Color options
   const colorOptions = [
-    '#000000', '#FF0000', '#00FF00', '#0000FF', 
+    '#000000', '#FF0000', '#00FF00', '#0000FF',
     '#FFFF00', '#FF00FF', '#00FFFF', '#808080'
   ]
-  
+
   // Computed properties
   const canUndo = computed(() => historyIndex.value > 0)
   const canRedo = computed(() => historyIndex.value < history.value.length - 1)
-  
+
   // Get all existing points for snapping
   const existingPoints = computed(() => {
     try {
       const points = []
-      
+
       // Add polyline points
       points.push(...polylinePoints.value)
-      
+
       // Add dimension points
       if (dimensionStart.value) {
         points.push(dimensionStart.value)
       }
-      
+
       // Add vector object points
       vectorObjects.value.forEach(obj => {
         if (obj.type === 'line') {
@@ -85,7 +88,7 @@ export const useCADStore = defineStore('cad', () => {
           points.push({ x: obj.x, y: obj.y })
         }
       })
-      
+
       return points
     } catch (error) {
       console.error('Error computing existing points:', error)
@@ -93,12 +96,12 @@ export const useCADStore = defineStore('cad', () => {
       return []
     }
   })
-  
+
   // Get all existing lines for snapping
   const existingLines = computed(() => {
     try {
       const lines = []
-      
+
       // Add polyline segments
       for (let i = 1; i < polylinePoints.value.length; i++) {
         lines.push({
@@ -106,7 +109,7 @@ export const useCADStore = defineStore('cad', () => {
           end: polylinePoints.value[i]
         })
       }
-      
+
       // Add vector object lines
       vectorObjects.value.forEach(obj => {
         if (obj.type === 'line') {
@@ -121,7 +124,7 @@ export const useCADStore = defineStore('cad', () => {
           )
         }
       })
-      
+
       return lines
     } catch (error) {
       console.error('Error computing existing lines:', error)
@@ -129,7 +132,7 @@ export const useCADStore = defineStore('cad', () => {
       return []
     }
   })
-  
+
   // Error handling
   const showErrorDialog = (message) => {
     errorMessage.value = message
@@ -139,12 +142,12 @@ export const useCADStore = defineStore('cad', () => {
       errorMessage.value = ''
     }, 3000)
   }
-  
+
   const clearError = () => {
     showError.value = false
     errorMessage.value = ''
   }
-  
+
   // Actions
   const setTool = (tool) => {
     try {
@@ -160,7 +163,7 @@ export const useCADStore = defineStore('cad', () => {
       showErrorDialog('Error setting tool')
     }
   }
-  
+
   const setLineWidth = (width) => {
     try {
       if (width >= 1 && width <= 20) {
@@ -171,7 +174,7 @@ export const useCADStore = defineStore('cad', () => {
       showErrorDialog('Error setting line width')
     }
   }
-  
+
   const setLineColor = (color) => {
     try {
       lineColor.value = color
@@ -180,7 +183,7 @@ export const useCADStore = defineStore('cad', () => {
       showErrorDialog('Error setting line color')
     }
   }
-  
+
   const setMousePosition = (x, y) => {
     try {
       mousePosition.value = { x, y }
@@ -188,7 +191,7 @@ export const useCADStore = defineStore('cad', () => {
       console.error('Error setting mouse position:', error)
     }
   }
-  
+
   const addPolylinePoint = (point) => {
     try {
       polylinePoints.value.push(point)
@@ -197,7 +200,7 @@ export const useCADStore = defineStore('cad', () => {
       showErrorDialog('Error adding polyline point')
     }
   }
-  
+
   const clearPolylinePoints = () => {
     try {
       polylinePoints.value = []
@@ -206,7 +209,7 @@ export const useCADStore = defineStore('cad', () => {
       showErrorDialog('Error clearing polyline points')
     }
   }
-  
+
   const setDimensionStart = (point) => {
     try {
       dimensionStart.value = point
@@ -215,7 +218,7 @@ export const useCADStore = defineStore('cad', () => {
       showErrorDialog('Error setting dimension start')
     }
   }
-  
+
   const clearDimensionStart = () => {
     try {
       dimensionStart.value = null
@@ -224,7 +227,54 @@ export const useCADStore = defineStore('cad', () => {
       showErrorDialog('Error clearing dimension start')
     }
   }
-  
+
+  const setDimensionSecondPoint = (point) => {
+    try {
+      dimensionSecondPoint.value = point
+    } catch (error) {
+      console.error('Error setting dimension second point:', error)
+      showErrorDialog('Error setting dimension second point')
+    }
+  }
+
+  const clearDimensionSecondPoint = () => {
+    try {
+      dimensionSecondPoint.value = null
+    } catch (error) {
+      console.error('Error clearing dimension second point:', error)
+      showErrorDialog('Error clearing dimension second point')
+    }
+  }
+
+  const setDimensionLinePosition = (position) => {
+    try {
+      dimensionLinePosition.value = position
+    } catch (error) {
+      console.error('Error setting dimension line position:', error)
+      showErrorDialog('Error setting dimension line position')
+    }
+  }
+
+  const clearDimensionLinePosition = () => {
+    try {
+      dimensionLinePosition.value = null
+    } catch (error) {
+      console.error('Error clearing dimension line position:', error)
+      showErrorDialog('Error clearing dimension line position')
+    }
+  }
+
+  const clearAllDimensionData = () => {
+    try {
+      dimensionStart.value = null
+      dimensionSecondPoint.value = null
+      dimensionLinePosition.value = null
+    } catch (error) {
+      console.error('Error clearing all dimension data:', error)
+      showErrorDialog('Error clearing all dimension data')
+    }
+  }
+
   const setIsDrawing = (drawing) => {
     try {
       isDrawing.value = drawing
@@ -233,7 +283,7 @@ export const useCADStore = defineStore('cad', () => {
       showErrorDialog('Error setting drawing state')
     }
   }
-  
+
   // Grid and snapping actions
   const setGridSize = (size) => {
     try {
@@ -246,7 +296,7 @@ export const useCADStore = defineStore('cad', () => {
       showErrorDialog('Error setting grid size')
     }
   }
-  
+
   const toggleGrid = () => {
     try {
       showGrid.value = !showGrid.value
@@ -255,7 +305,7 @@ export const useCADStore = defineStore('cad', () => {
       showErrorDialog('Error toggling grid')
     }
   }
-  
+
   const toggleSnapToGrid = () => {
     try {
       snapToGrid.value = !snapToGrid.value
@@ -264,7 +314,7 @@ export const useCADStore = defineStore('cad', () => {
       showErrorDialog('Error toggling snap to grid')
     }
   }
-  
+
   const toggleSnapToPoints = () => {
     try {
       snapToPoints.value = !snapToPoints.value
@@ -273,7 +323,7 @@ export const useCADStore = defineStore('cad', () => {
       showErrorDialog('Error toggling snap to points')
     }
   }
-  
+
   const toggleSnapToLines = () => {
     try {
       snapToLines.value = !snapToLines.value
@@ -282,7 +332,7 @@ export const useCADStore = defineStore('cad', () => {
       showErrorDialog('Error toggling snap to lines')
     }
   }
-  
+
   const setSnapTolerance = (tolerance) => {
     try {
       // Add validation for snap tolerance
@@ -294,7 +344,7 @@ export const useCADStore = defineStore('cad', () => {
       showErrorDialog('Error setting snap tolerance')
     }
   }
-  
+
   // Vector object actions
   const addVectorObject = (object) => {
     try {
@@ -304,7 +354,7 @@ export const useCADStore = defineStore('cad', () => {
       showErrorDialog('Error adding vector object')
     }
   }
-  
+
   const removeVectorObject = (index) => {
     try {
       vectorObjects.value.splice(index, 1)
@@ -313,7 +363,7 @@ export const useCADStore = defineStore('cad', () => {
       showErrorDialog('Error removing vector object')
     }
   }
-  
+
   const clearVectorObjects = () => {
     try {
       vectorObjects.value = []
@@ -322,7 +372,7 @@ export const useCADStore = defineStore('cad', () => {
       showErrorDialog('Error clearing vector objects')
     }
   }
-  
+
   const selectObject = (index) => {
     try {
       selectedObjects.value = [index]
@@ -331,7 +381,7 @@ export const useCADStore = defineStore('cad', () => {
       showErrorDialog('Error selecting object')
     }
   }
-  
+
   const clearSelection = () => {
     try {
       selectedObjects.value = []
@@ -340,7 +390,7 @@ export const useCADStore = defineStore('cad', () => {
       showErrorDialog('Error clearing selection')
     }
   }
-  
+
   // Input dialog actions
   const showInput = (prompt, callback) => {
     try {
@@ -353,7 +403,7 @@ export const useCADStore = defineStore('cad', () => {
       showErrorDialog('Error showing input dialog')
     }
   }
-  
+
   const submitInput = () => {
     try {
       if (inputCallback.value) {
@@ -366,7 +416,7 @@ export const useCADStore = defineStore('cad', () => {
       showErrorDialog('Error submitting input')
     }
   }
-  
+
   const cancelInput = () => {
     try {
       showInputDialog.value = false
@@ -377,7 +427,7 @@ export const useCADStore = defineStore('cad', () => {
       showErrorDialog('Error canceling input')
     }
   }
-  
+
   const saveState = (imageData) => {
     try {
       // Implement history limits
@@ -386,7 +436,7 @@ export const useCADStore = defineStore('cad', () => {
         history.value.shift()
         historyIndex.value = Math.max(0, historyIndex.value - 1)
       }
-      
+
       history.value = history.value.slice(0, historyIndex.value + 1)
       history.value.push(imageData)
       historyIndex.value++
@@ -395,7 +445,7 @@ export const useCADStore = defineStore('cad', () => {
       showErrorDialog('Error saving state')
     }
   }
-  
+
   const undo = () => {
     try {
       if (canUndo.value) {
@@ -409,7 +459,7 @@ export const useCADStore = defineStore('cad', () => {
       return null
     }
   }
-  
+
   const redo = () => {
     try {
       if (canRedo.value) {
@@ -423,7 +473,7 @@ export const useCADStore = defineStore('cad', () => {
       return null
     }
   }
-  
+
   const clearHistory = () => {
     try {
       history.value = []
@@ -433,11 +483,11 @@ export const useCADStore = defineStore('cad', () => {
       showErrorDialog('Error clearing history')
     }
   }
-  
+
   const resetCanvas = () => {
     try {
       clearPolylinePoints()
-      clearDimensionStart()
+      clearAllDimensionData()
       clearVectorObjects()
       clearSelection()
       setIsDrawing(false)
@@ -447,7 +497,7 @@ export const useCADStore = defineStore('cad', () => {
       showErrorDialog('Error resetting canvas')
     }
   }
-  
+
   // Zoom methods
   const zoomIn = () => {
     try {
@@ -458,7 +508,7 @@ export const useCADStore = defineStore('cad', () => {
       showErrorDialog('Error zooming in')
     }
   }
-  
+
   const zoomOut = () => {
     try {
       const newZoom = Math.max(zoomLevel.value / 1.2, zoomMin)
@@ -468,7 +518,7 @@ export const useCADStore = defineStore('cad', () => {
       showErrorDialog('Error zooming out')
     }
   }
-  
+
   const setZoom = (level) => {
     try {
       const newZoom = Math.max(zoomMin, Math.min(level, zoomMax))
@@ -478,7 +528,7 @@ export const useCADStore = defineStore('cad', () => {
       showErrorDialog('Error setting zoom')
     }
   }
-  
+
   const resetZoom = () => {
     try {
       zoomLevel.value = 1
@@ -487,7 +537,36 @@ export const useCADStore = defineStore('cad', () => {
       showErrorDialog('Error resetting zoom')
     }
   }
-  
+
+  // Pan methods
+  const setPanOffset = (x, y) => {
+    try {
+      panOffset.value = { x, y }
+    } catch (error) {
+      console.error('Error setting pan offset:', error)
+      showErrorDialog('Error setting pan offset')
+    }
+  }
+
+  const addPanOffset = (deltaX, deltaY) => {
+    try {
+      panOffset.value.x += deltaX
+      panOffset.value.y += deltaY
+    } catch (error) {
+      console.error('Error adding pan offset:', error)
+      showErrorDialog('Error adding pan offset')
+    }
+  }
+
+  const resetPan = () => {
+    try {
+      panOffset.value = { x: 0, y: 0 }
+    } catch (error) {
+      console.error('Error resetting pan:', error)
+      showErrorDialog('Error resetting pan')
+    }
+  }
+
   return {
     // State
     canvasWidth,
@@ -495,6 +574,7 @@ export const useCADStore = defineStore('cad', () => {
     zoomLevel,
     zoomMin,
     zoomMax,
+    panOffset,
     currentTool,
     lineWidth,
     lineColor,
@@ -507,6 +587,8 @@ export const useCADStore = defineStore('cad', () => {
     isDrawing,
     polylinePoints,
     dimensionStart,
+    dimensionSecondPoint,
+    dimensionLinePosition,
     mousePosition,
     vectorObjects,
     selectedObjects,
@@ -518,13 +600,13 @@ export const useCADStore = defineStore('cad', () => {
     colorOptions,
     errorMessage,
     showError,
-    
+
     // Computed
     canUndo,
     canRedo,
     existingPoints,
     existingLines,
-    
+
     // Actions
     setTool,
     setLineWidth,
@@ -534,6 +616,11 @@ export const useCADStore = defineStore('cad', () => {
     clearPolylinePoints,
     setDimensionStart,
     clearDimensionStart,
+    setDimensionSecondPoint,
+    clearDimensionSecondPoint,
+    setDimensionLinePosition,
+    clearDimensionLinePosition,
+    clearAllDimensionData,
     setIsDrawing,
     setGridSize,
     toggleGrid,
@@ -550,6 +637,9 @@ export const useCADStore = defineStore('cad', () => {
     zoomOut,
     setZoom,
     resetZoom,
+    setPanOffset,
+    addPanOffset,
+    resetPan,
     showInput,
     submitInput,
     cancelInput,
